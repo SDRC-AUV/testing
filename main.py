@@ -1,4 +1,6 @@
 
+#smach only, navigation wasn't usable
+
 import rospy
 
 import mavros
