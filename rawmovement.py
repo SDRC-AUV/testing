@@ -134,24 +134,26 @@ class RCIOPowerNormalized(RCIOPower):
         msg = mavros_msgs.msg.OverrideRCIn()
         msg.channels = self.__call__()
 
+
+def log(data):
+    print(str(data.data))
+
 class RawMovement:
     def __init__(self):
-        #def update_in_message(msg):
-            # I'd really like to store these as a self variable, but:
-            #   * update_msg(self, msg) doesn't work, self would get called 
-            #   * can't do update_msg(self=self, msg) because everything after the first optional parameter must be optional
-            #   * can't do update_msg(msg, self=self) because lolpython
-        #    rospy.loginfo("[RCIn]: " + msg.data)
-        #def update_out_message(msg):
-        #    rospy.loginfo("[RCOut]: " + msg.data)
 
         mavros.set_namespace()
         self.last_rcio_power = RCIOPower()
+
         self.publisher = rospy.Publisher('/mavros/rc/override',  mavros_msgs.msg.OverrideRCIn)
-        #self.in_subscriber  = rospy.Subscriber('/mavros/rc/in',  mavros_msgs.msg.RCIn, callback=update_in_message)
-        #self.out_subscriber = rospy.Subscriber('/mavros/rc/out', mavros_msgs.msg.RCOut, callback=update_out_message)
+        self.in_subscriber  = rospy.Subscriber('/mavros/rc/in',  mavros_msgs.msg.RCIn, callback=log)
+        self.out_subscriber = rospy.Subscriber('/mavros/rc/out', mavros_msgs.msg.RCOut, callback=log)
         
         self.arm_function = rospy.ServiceProxy(mavros.get_topic('cmd', 'arming'), mavros_msgs.srv.CommandBool).call
+
+        alt_hold_msg = mavros_msgs.msg.OverrideRCIn()
+        alt_hold_msg.channels = [0, 0, 0, 0, 1500, 0, 0, 0]
+
+        self.publisher.publish(alt_hold_msg)
     
     def set_motor_power(self, power):
         self.publisher.publish(power.get_message())
