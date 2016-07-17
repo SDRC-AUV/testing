@@ -1,1 +1,4 @@
-*.pyc
+triton/CMakeLists.txt~
+triton/package.xml~
+*.py~
+triton/triton.launch~

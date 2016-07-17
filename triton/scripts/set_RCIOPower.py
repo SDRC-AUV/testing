@@ -25,6 +25,7 @@ yaw = 1500
 forward = 1500
 lateral = 1500
 
+RCOverRidePub = 0
 
 def handle_set_RCIOPower(req):
 	
@@ -41,11 +42,9 @@ def handle_set_RCIOPower(req):
 	global forwardPub.publish(forward)
 	global lateral = req.f
 	global lateralPub.publish(lateral)
-	try:
-		set_rc = rospy.ServiceProxy(mavros.get_topic('rc'),override)
-		ret = set_rc(roll,pitch,throttle,yaw,0,forward,lateral,0)
-	except rospy.ServiceException, e:
-		rospy.loginfo("Failed to set rc override")
+	alt_hold_msg = mavros_msg.OverrideRCin()
+	alt_hold_msg.channels = [roll,pitch,throttle,yaw,0,forward,lateral,0]
+	RCOverRidePub.publish(alt_hold_msg)
 
 
 
@@ -57,11 +56,12 @@ def set_RCIOPower_server():
 	rospy.loginfo("Setup set_RCIOPower server and publisher")
 	global pitchPub = rospy.Publisher('RCIOPitch',int, queue_size=10) 
 	global rollPub = rospy.Publisher('RCIORoll',int, queue_size=10)
-	global throttlePub = rospy.Publisher('RCIOthrottle',int, queue_size=10)
-	global yawePub = rospy.Publisher('RCIOyaw',int, queue_size=10)
-	global forwardPub = rospy.Publisher('RCIOforward',int, queue_size=10)
-	global lateralPub = rospy.Publisher('RCIOlateral',int, queue_size=10)
-	rospy.spin
+	global throttlePub = rospy.Publisher('RCIOThrottle',int, queue_size=10)
+	global yawPub = rospy.Publisher('RCIOYaw',int, queue_size=10)
+	global forwardPub = rospy.Publisher('RCIOForward',int, queue_size=10)
+	global lateralPub = rospy.Publisher('RCIOLateral',int, queue_size=10)
+	global RCOverRidePub =  rospy.Publisher('/mavros/rc/override',mavros_msgs.msg.OverrideRCIn)
+	rospy.spin()
 
 if __name__ == "__main__":
 	set_RCIOPower_server()

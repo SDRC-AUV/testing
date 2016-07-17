@@ -30,6 +30,7 @@ from std_msgs.msg import String
 
 
 def mainLoop():
+	rospy.init_node("mainLoop")
 	mission = 0
 	while True:
 		

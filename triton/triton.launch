@@ -1,0 +1,123 @@
+<launch>
+
+
+
+	<arg name="fcu_url" default="/dev/ttyACM0:57600" />
+	<arg name="gcs_url" default="" />
+	<arg name="tgt_system" default="1" />
+	<arg name="tgt_component" default="1" />
+	<arg name="log_output" default="screen" />
+
+	<include file="$(find mavros)/launch/node.launch">
+		<arg name="pluginlists_yaml" value="$(find mavros)/launch/apm_pluginlists.yaml" />
+		<arg name="config_yaml" value="$(find mavros)/launch/apm_config.yaml" />
+
+		<arg name="fcu_url" value="$(arg fcu_url)" />
+		<arg name="gcs_url" value="$(arg gcs_url)" />
+		<arg name="tgt_system" value="$(arg tgt_system)" />
+		<arg name="tgt_component" value="$(arg tgt_component)" />
+		<arg name="log_output" value="$(arg log_output)" />
+	</include>
+	
+ 	<group ns="frontcam">
+
+ 		<node name="front_usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+
+   	 		<param name="video_device" value="/dev/video0" />
+
+   			<param name="image_width" value="640" />
+
+   			<param name="image_height" value="480" />
+		
+    			<param name="pixel_format" value="yuyv" />
+
+   			<param name="camera_frame_id" value="usb_cam" />
+
+   	 		<param name="io_method" value="mmap"/>
+	
+  		</node>
+
+ 	</group>  
+
+​
+
+	 <group ns="bottomcam">
+
+	 	<node name="bottom_usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+
+	    		<param name="video_device" value="/dev/video1" />
+
+	   		<param name="image_width" value="640" />
+
+	  	  	<param name="image_height" value="480" />
+
+	    		<param name="pixel_format" value="yuyv" />
+
+	    		<param name="camera_frame_id" value="usb_cam" />
+
+	    		<param name="io_method" value="mmap"/>
+
+	  	</node>
+
+	 </group>
+
+​
+
+
+	<node
+		pkg="triton"
+		type="between"
+		name="between"
+		respawn="true"
+		output="screen"
+	/>
+	<node
+		pkg="triton"
+		type="norm_to_pwm"
+		name="norm_to_pwm"
+		respawn="true"
+	/>
+	<node
+		pkg="triton"
+		type="pwm_to_norm"
+		name="pwm_to_norm"
+		respawn="true"
+	/>
+	<node
+		pkg="triton"
+		type="set_RCIOPower"
+		name="set_RCIOPower"
+		respawn="true"
+	/>
+	<node
+		pkg="triton"
+		type="mainLoop"
+		name="mainLoop"
+		required="true"
+	/>
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</launch>

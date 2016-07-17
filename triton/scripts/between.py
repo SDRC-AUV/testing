@@ -16,7 +16,7 @@ def between_server():
 	rospy.init_node('between_server')
 	s = rospy.Service('between', between, handle_between)
 	rospy.loginfo("Setup between server")
-	rospy.spin
+	rospy.spin()
 
 if __name__ == "__main__":
 	between_server()

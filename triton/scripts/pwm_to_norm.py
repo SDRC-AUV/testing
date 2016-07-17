@@ -31,7 +31,7 @@ def pwm_to_norm_server():
 	rospy.init_node('pwm_to_norm_server')
 	s = rospy.Service('pwm_to_norm', pwm_to_norm, handle_pwm_to_norm)
 	rospy.loginfo("Setup pwm to norm server")
-	rospy.spin
+	rospy.spin()
 
 if __name__ == "__main__":
 	pwm_to_norm_server()

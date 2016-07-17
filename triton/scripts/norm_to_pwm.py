@@ -13,7 +13,7 @@ def handle_norm_to_pwm(req):
 	rospy.wait_for_service('between')
 	try:
 		between = rospy.ServiceProxy('between', between)
-		resp1 = between(1,1,req.a)
+		resp1 = between(-1,1,req.a)
 	except rospy.ServiceException, e:
 		rospy.loginfo("Failed to call between service")
 	if resp1 == true:
@@ -31,7 +31,7 @@ def norm_to_pwm_server():
 	rospy.init_node('norm_to_pwm_server')
 	s = rospy.Service('norm_to_pwm', norm_to_pwm, handle_norm_to_pwm)
 	rospy.loginfo("Setup norm to pwm server")
-	rospy.spin
+	rospy.spin()
 
 if __name__ == "__main__":
 	norm_to_pwm_server()
