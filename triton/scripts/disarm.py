@@ -5,14 +5,19 @@ import mavros
 import mavros_msgs.msg
 import mavros_msgs.srv
 
-def disarm():
+def handle_disarm():
 	mavros.set_namespace()
-	rospy.ServiceProxy(mavros.get_topic('cmd', 'arming'), mavros_msgs.srv.CommandBool).call(False)
+	try:
+		disarm = rospy.ServiceProxy(mavros.get_topic('cmd'), arming)
+		ret = disarm(false)
+	except rospy.ServiceException, e:
+		rospy.loginfo("Disarming failed")
+	
 
 def disarm_server():
 	rospy.init_node('disarm_server')
-	s = rospy.Service('disarm', disarm, disarm)
-	print "Disarming motors"
+	s = rospy.Service('disarm', disarm, handle_disarm)
+	rospy.loginfo("Setup disarm server")
 	rospy.spin
 
 if __name__ == "__main__":
