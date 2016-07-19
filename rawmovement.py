@@ -3,15 +3,24 @@ import mavros
 import mavros_msgs.msg
 import mavros_msgs.srv
 
+from pymavlink import mavutil
+
 DEBUG = True
+
+MAVROS = True
+
 
 def arm():
     mavros.set_namespace()
-    rospy.ServiceProxy(mavros.get_topic('cmd', 'arming'), mavros_msgs.srv.CommandBool).call(True)
+    service = mavros.get_topic('cmd', 'arming')
+    rospy.wait_for_service(service)
+    rospy.ServiceProxy(service, mavros_msgs.srv.CommandBool).call(True)
     
 def disarm():
     mavros.set_namespace()
-    rospy.ServiceProxy(mavros.get_topic('cmd', 'arming'), mavros_msgs.srv.CommandBool).call(False)
+    service = mavros.get_topic('cmd', 'arming')
+    rospy.wait_for_service(service, timeout=5)
+    rospy.ServiceProxy(service, mavros_msgs.srv.CommandBool).call(False)
 
 def between(a, b, value):
     if value < min(a, b) or value > max(a, b):
@@ -80,10 +89,10 @@ class RCIOPower:
                 self.roll, \
                 self.throttle, \
                 self.yaw, \
-                0, \
+                0xffff, \
                 self.forward, \
                 self.lateral, \
-                0]
+                0xffff]
     
     def get_message(self):
         msg = mavros_msgs.msg.OverrideRCIn()
@@ -125,10 +134,10 @@ class RCIOPowerNormalized(RCIOPower):
                 norm_to_pwm(self.roll),\
                 norm_to_pwm(self.throttle),\
                 norm_to_pwm(self.yaw),\
-                0, \
+                0xffff, \
                 norm_to_pwm(self.forward),\
                 norm_to_pwm(self.lateral),\
-                0]
+                0xffff]
 
     def get_message(self):
         msg = mavros_msgs.msg.OverrideRCIn()
@@ -141,25 +150,41 @@ def log(data):
 class RawMovement:
     def __init__(self):
 
-        mavros.set_namespace()
-        self.last_rcio_power = RCIOPower()
+        if not MAVROS:        
+            mavros.set_namespace()
+            self.last_rcio_power = RCIOPower()
 
-        self.publisher = rospy.Publisher('/mavros/rc/override',  mavros_msgs.msg.OverrideRCIn)
-        self.in_subscriber  = rospy.Subscriber('/mavros/rc/in',  mavros_msgs.msg.RCIn, callback=log)
-        self.out_subscriber = rospy.Subscriber('/mavros/rc/out', mavros_msgs.msg.RCOut, callback=log)
-        
-        self.arm_function = rospy.ServiceProxy(mavros.get_topic('cmd', 'arming'), mavros_msgs.srv.CommandBool).call
+            self.publisher = rospy.Publisher('/mavros/rc/override',  mavros_msgs.msg.OverrideRCIn)
+            self.in_subscriber  = rospy.Subscriber('/mavros/rc/in',  mavros_msgs.msg.RCIn, callback=log)
+            self.out_subscriber = rospy.Subscriber('/mavros/rc/out', mavros_msgs.msg.RCOut, callback=log)
+            
+            self.arm_function = rospy.ServiceProxy(mavros.get_topic('cmd', 'arming'), mavros_msgs.srv.CommandBool).call
 
-        alt_hold_msg = mavros_msgs.msg.OverrideRCIn()
-        alt_hold_msg.channels = [0, 0, 0, 0, 1500, 0, 0, 0]
+            alt_hold_msg = mavros_msgs.msg.OverrideRCIn()
+            alt_hold_msg.channels = [0xffff, 0xffff, 0xffff, 0xffff, 1500, 0xffff, 0xffff, 0xffff]
 
-        self.publisher.publish(alt_hold_msg)
+            self.publisher.publish(alt_hold_msg)
+        else:
+            self.master = mavutil.mavlink_connection(None, baud = 115200)
+            print("waiting for heartbeat...")
+            master.wait_heartbeat()
+            print("Connected")
+            master.mav.requrest_data_stream_send(master.target_system, master.target_component, mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
     
     def set_motor_power(self, power):
-        self.publisher.publish(power.get_message())
+        if not MAVROS:
+            self.publisher.publish(power.get_message())
+        else:
+            master.mav.rc_channels_override_send(master.target_system, master.target_component, power())
+
 
     def arm(self):
         self.arm_function(True)
     
     def disarm(self):
         self.arm_function(False)
+
+    def close(self):
+        if MAVROS:
+            self.master.mav.rc_channels_override_send(master.target_system, master.target_component, [0]*8)
+
