@@ -66,32 +66,32 @@
 
 	<node
 		pkg="triton"
-		type="between"
+		type="between.py"
 		name="between"
 		respawn="true"
 		output="screen"
 	/>
 	<node
 		pkg="triton"
-		type="norm_to_pwm"
+		type="norm_to_pwm.py"
 		name="norm_to_pwm"
 		respawn="true"
 	/>
 	<node
 		pkg="triton"
-		type="pwm_to_norm"
+		type="pwm_to_norm.py"
 		name="pwm_to_norm"
 		respawn="true"
 	/>
 	<node
 		pkg="triton"
-		type="set_RCIOPower"
+		type="set_RCIOPower.py"
 		name="set_RCIOPower"
 		respawn="true"
 	/>
 	<node
 		pkg="triton"
-		type="mainLoop"
+		type="mainLoop.py"
 		name="mainLoop"
 		required="true"
 	/>

@@ -32,8 +32,8 @@ from std_msgs.msg import String
 def mainLoop():
 	rospy.init_node("mainLoop")
 	mission = 0
-	while True:
-		
+	var = 1
+	while var == 1:		
 		if mission == 0:
 			#Call prerun service
 			#rospy.wait_for_service('prerun')
@@ -192,15 +192,9 @@ def mainLoop():
 				#mission = 0			
 			#except rospy.ServiceException, e:
 				#print "Call to test failed: %s"%e
+			missions = -1
 
 
-
-
-
-if __name__ == '__main__':
-	try:
-		mainLoop()
-	except rospy.ROSInterruptException:
-		pass
-
+if __name__ == "__main__":
+	mainLoop()
 
