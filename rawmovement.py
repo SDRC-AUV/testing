@@ -7,7 +7,7 @@ from pymavlink import mavutil
 
 DEBUG = True
 
-MAVROS = True
+MAVLINK = True
 
 
 def arm():
@@ -150,7 +150,7 @@ def log(data):
 class RawMovement:
     def __init__(self):
 
-        if not MAVROS:        
+        if not MAVLINK:        
             mavros.set_namespace()
             self.last_rcio_power = RCIOPower()
 
@@ -165,26 +165,33 @@ class RawMovement:
 
             self.publisher.publish(alt_hold_msg)
         else:
-            self.master = mavutil.mavlink_connection(None, baud = 115200)
+            self.master = mavutil.mavlink_connection("/dev/ttyACM0", baud = 57600)
             print("waiting for heartbeat...")
-            master.wait_heartbeat()
+            self.master.wait_heartbeat()
             print("Connected")
-            master.mav.requrest_data_stream_send(master.target_system, master.target_component, mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
+            self.master.mav.request_data_stream_send(master.target_system, self.master.target_component, mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
     
     def set_motor_power(self, power):
-        if not MAVROS:
+
+        if not MAVLINK:
             self.publisher.publish(power.get_message())
         else:
-            master.mav.rc_channels_override_send(master.target_system, master.target_component, power())
+            self.master.mav.rc_channels_override_send(master.target_system, self.master.target_component, *power())
 
 
     def arm(self):
-        self.arm_function(True)
-    
+        if not MAVLINK:
+            self.arm_function(True)
+        else:
+            self.master.arducopter_arm()
+
     def disarm(self):
-        self.arm_function(False)
+        if not MAVLINK:
+            self.arm_function(False)
+        else:
+            self.master.arducopter_disarm()
 
     def close(self):
-        if MAVROS:
-            self.master.mav.rc_channels_override_send(master.target_system, master.target_component, [0]*8)
+        if MAVLINK:
+            self.master.mav.rc_channels_override_send(master.target_system, self.master.target_component, 0,0,0,0,0,0,0,0)
 
